@@ -39,3 +39,5 @@ def sender_ip(k):
         raise ValueError(f"Sender index -{k}- doesn't fit in {BENCHMARK_NETWORK}")
     return str(BENCHMARK_NETWORK[k])
 
+def sender_address(k):
+    return f"user{k}@sender{k}.example"
