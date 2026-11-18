@@ -15,20 +15,28 @@ class SimConfig:
     zipf_s: float = 1.0
     n_mailboxes: int = 20_000
 
+@dataclass(frozen=True, slots=True)
+class Sender:
+    ip: str
+    address: str
+
 def simulate(config):
     rng = random.Random(config.seed)
     clock = 0.0
     message_id = 0
-
+    senders = list()
+    for k in range(config.n_senders):
+        senders.append(Sender(ip=sender_ip(k), address=sender_address(k)))
     while True:
         clock += rng.expovariate(config.rate)
         if clock > config.duration:
             return
+        sender = rng.choice(senders)
         message_id += 1
         yield Event(
             timestamp=clock,
-            client_ip='203.0.113.7',
-            mail_from='alice@example.com',
+            client_ip= sender.ip,
+            mail_from= sender.address,
             rcpt_to='emily@example.com',
             message_id=message_id,
             label=Label.NORMAL
