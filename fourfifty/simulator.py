@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import random
 import ipaddress
 from ipaddress import IPv4Network
+from itertools import accumulate
 
 from fourfifty.events import Event, Label
 
@@ -25,13 +26,16 @@ def simulate(config):
     clock = 0.0
     message_id = 0
     senders = list()
+    weights = list()
     for k in range(config.n_senders):
         senders.append(Sender(ip=sender_ip(k), address=sender_address(k)))
+        weights.append(1 / (k + 1) ** config.zipf_s)
+    cum_weights = list(accumulate(weights))
     while True:
         clock += rng.expovariate(config.rate)
         if clock > config.duration:
             return
-        sender = rng.choice(senders)
+        sender = rng.choices(senders, cum_weights=cum_weights)[0]
         message_id += 1
         yield Event(
             timestamp=clock,
