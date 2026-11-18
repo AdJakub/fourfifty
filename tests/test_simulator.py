@@ -1,6 +1,9 @@
+from ipaddress import IPv4Address
 from itertools import islice
 
-from fourfifty.simulator import SimConfig, simulate
+import pytest
+
+from fourfifty.simulator import SimConfig, simulate, sender_ip
 
 import math
 
@@ -23,3 +26,18 @@ def test_count_is_plausible():
     tolerance = math.sqrt(expected) * 3
     count = sum(1 for _ in simulate(config))
     assert abs(count - expected) <= tolerance
+
+def test_ip():
+    assert sender_ip(0) ==  '198.18.0.0'
+    assert sender_ip(256) == '198.18.1.0'
+    assert sender_ip(255) == '198.18.0.255'
+    assert sender_ip(65_536) == '198.19.0.0'
+
+
+def test_ip_rejection_1():
+    with pytest.raises(ValueError):
+        sender_ip(131_072)
+
+def test_ip_rejection_2():
+    with pytest.raises(ValueError):
+        sender_ip(-1)

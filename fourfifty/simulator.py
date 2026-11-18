@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 import random
+import ipaddress
+from ipaddress import IPv4Network
+
 from fourfifty.events import Event, Label
+
+BENCHMARK_NETWORK = IPv4Network('198.18.0.0/15')
 @dataclass(frozen=True)
 class SimConfig:
     seed: int = 42
@@ -28,3 +33,9 @@ def simulate(config):
             message_id=message_id,
             label=Label.NORMAL
         )
+
+def sender_ip(k):
+    if k >= BENCHMARK_NETWORK.num_addresses or k < 0:
+        raise ValueError(f"Sender index -{k}- doesn't fit in {BENCHMARK_NETWORK}")
+    return str(BENCHMARK_NETWORK[k])
+
