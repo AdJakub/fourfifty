@@ -3,7 +3,7 @@ from itertools import islice
 
 import pytest
 
-from fourfifty.simulator import SimConfig, simulate, sender_ip, sender_address
+from fourfifty.simulator import SimConfig, simulate, sender_ip, sender_address, zipf_weights
 
 import math
 
@@ -45,3 +45,6 @@ def test_ip_rejection_2():
 def test_email_address_generation():
     assert sender_address(0) == 'user0@sender0.example'
     assert sender_address(9_999) == 'user9999@sender9999.example'
+
+def test_zipf_weights():
+    assert zipf_weights(3, 1.0) == pytest.approx([1.0, 0.5, 1/3])
