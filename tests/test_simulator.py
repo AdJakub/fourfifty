@@ -1,5 +1,6 @@
 from ipaddress import IPv4Address
 from itertools import islice
+from collections import Counter
 
 import pytest
 
@@ -48,3 +49,26 @@ def test_email_address_generation():
 
 def test_zipf_weights():
     assert zipf_weights(3, 1.0) == pytest.approx([1.0, 0.5, 1/3])
+
+def test_simulator_share():
+    config = SimConfig(seed=3, duration=600.0)
+    counts = Counter(event.mail_from for event in simulate(config))
+    total = sum(counts.values())
+    top_100 = counts.most_common(100)
+    top_share = sum(count for _, count in top_100) / total
+    weights = zipf_weights(config.n_senders, config.zipf_s)
+    expected_share = sum(weights[:100]) / sum(weights)
+    assert top_share == pytest.approx(expected_share, abs=0.02)
+
+def test_how_many_over_10k_k():
+    config = SimConfig(seed=3, duration=600.0)
+    counts = Counter(event.mail_from for event in simulate(config))
+    addresses = set()
+    for k in range (10_000, config.n_mailboxes):
+        addresses.add(sender_address(k))
+    overlap = 0
+    for mail in counts:
+        if mail in addresses:
+            overlap += 1
+    assert overlap > 0
+

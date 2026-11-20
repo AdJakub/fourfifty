@@ -26,7 +26,7 @@ def simulate(config):
     clock = 0.0
     message_id = 0
     senders = list()
-    for k in range(config.n_senders):
+    for k in rng.sample(range(config.n_mailboxes), config.n_senders):
         senders.append(Sender(ip=sender_ip(k), address=sender_address(k)))
     cum_weights = list(accumulate(zipf_weights(config.n_senders, config.zipf_s)))
     while True:
