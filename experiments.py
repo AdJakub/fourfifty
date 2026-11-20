@@ -23,13 +23,15 @@ from collections import Counter
 # for simulation in simulate(SimConfig()):
 #     cnt += 1
 # print(cnt)
-config = SimConfig()
+config = SimConfig(seed=3, duration=600.0)
 counts = Counter(event.mail_from for event in simulate(config))
+print (len(counts))
 total = sum(counts.values())
+print(total)
 top_100 = counts.most_common(100)
 top_share =  sum(count for _, count in top_100) / total
 
-weights = zipf_weights(config.sender_n, config.zipf_s)
+weights = zipf_weights(config.n_senders, config.zipf_s)
 expected_share = sum(weights[:100]) / sum(weights)
 
 print(top_share, expected_share)

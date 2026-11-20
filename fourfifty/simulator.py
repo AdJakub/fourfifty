@@ -28,12 +28,12 @@ def simulate(config):
     senders = list()
     for k in range(config.n_senders):
         senders.append(Sender(ip=sender_ip(k), address=sender_address(k)))
-    weights = zipf_weights(config.n_senders, config.zipf_s)
+    cum_weights = list(accumulate(zipf_weights(config.n_senders, config.zipf_s)))
     while True:
         clock += rng.expovariate(config.rate)
         if clock > config.duration:
             return
-        sender = rng.choices(senders, cum_weights=weights)[0]
+        sender = rng.choices(senders, cum_weights=cum_weights)[0]
         message_id += 1
         yield Event(
             timestamp=clock,
