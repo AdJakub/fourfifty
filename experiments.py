@@ -1,3 +1,6 @@
+import random
+import statistics
+from itertools import accumulate
 from unittest import expectedFailure
 
 from fourfifty.events import Label, Event
@@ -24,14 +27,26 @@ from collections import Counter
 #     cnt += 1
 # print(cnt)
 config = SimConfig(seed=3, duration=600.0)
-counts = Counter(event.mail_from for event in simulate(config))
-print (len(counts))
-total = sum(counts.values())
-print(total)
-top_100 = counts.most_common(100)
-top_share =  sum(count for _, count in top_100) / total
+# counts = Counter(event.mail_from for event in simulate(config))
+# print (len(counts))
+# total = sum(counts.values())
+# print(total)
+# top_100 = counts.most_common(100)
+# top_share =  sum(count for _, count in top_100) / total
+#
+# weights = zipf_weights(config.n_senders, config.zipf_s)
+# expected_share = sum(weights[:100]) / sum(weights)
+#
+# print(top_share, expected_share)
+# cap = 0.85 * config.n_mailboxes
+rng = random.Random(config.seed)
+# sizes = [min(rng.paretovariate(1)*3, cap) for _ in range (10_000)]
+# print(sum(1 for s in sizes if s == cap))
+# print(min(sizes), statistics.median(sizes), max(sizes))
 
-weights = zipf_weights(config.n_senders, config.zipf_s)
-expected_share = sum(weights[:100]) / sum(weights)
+pool = range(config.n_mailboxes)
+cum = list(accumulate(zipf_weights(config.n_mailboxes, config.zipf_s)))
 
-print(top_share, expected_share)
+for size in [3, 10, 100, 1_000, 17_000]:
+    picked = rng.choices(pool, cum_weights=cum, k=size)
+    print(size, len(set(picked)))

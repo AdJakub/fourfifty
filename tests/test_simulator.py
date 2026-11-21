@@ -5,7 +5,7 @@ from collections import Counter
 import pytest
 
 from fourfifty.simulator import SimConfig, simulate, sender_ip, sender_address, zipf_weights
-
+from fourfifty.events import Label
 import math
 
 def test_same_seed_same_stream():
@@ -23,7 +23,7 @@ def test_time_never_goes_back():
 
 def test_count_is_plausible():
     config = SimConfig(duration=600.0)
-    expected = 30_000
+    expected = (config.rate + config.harv_speed) * config.duration
     tolerance = math.sqrt(expected) * 3
     count = sum(1 for _ in simulate(config))
     assert abs(count - expected) <= tolerance
@@ -52,7 +52,7 @@ def test_zipf_weights():
 
 def test_simulator_share():
     config = SimConfig(seed=3, duration=600.0)
-    counts = Counter(event.mail_from for event in simulate(config))
+    counts = Counter(event.mail_from for event in simulate(config) if event.label == Label.NORMAL)
     total = sum(counts.values())
     top_100 = counts.most_common(100)
     top_share = sum(count for _, count in top_100) / total
@@ -72,3 +72,7 @@ def test_how_many_over_10k_k():
             overlap += 1
     assert overlap > 0
 
+def test_if_receiver_is_random():
+    config = SimConfig(seed=3, duration=600.0)
+    counts = Counter(event.rcpt_to for event in simulate(config))
+    assert len(counts) > 1_000
