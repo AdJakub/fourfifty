@@ -26,7 +26,7 @@ from collections import Counter
 # for simulation in simulate(SimConfig()):
 #     cnt += 1
 # print(cnt)
-config = SimConfig(seed=3, duration=600.0)
+config = SimConfig(duration=600.0)
 # counts = Counter(event.mail_from for event in simulate(config))
 # print (len(counts))
 # total = sum(counts.values())
@@ -39,14 +39,18 @@ config = SimConfig(seed=3, duration=600.0)
 #
 # print(top_share, expected_share)
 # cap = 0.85 * config.n_mailboxes
-rng = random.Random(config.seed)
-# sizes = [min(rng.paretovariate(1)*3, cap) for _ in range (10_000)]
-# print(sum(1 for s in sizes if s == cap))
-# print(min(sizes), statistics.median(sizes), max(sizes))
+# rng = random.Random(config.seed)
+# # sizes = [min(rng.paretovariate(1)*3, cap) for _ in range (10_000)]
+# # print(sum(1 for s in sizes if s == cap))
+# # print(min(sizes), statistics.median(sizes), max(sizes))
+#
+# pool = range(config.n_mailboxes)
+# cum = list(accumulate(zipf_weights(config.n_mailboxes, config.zipf_s)))
+#
+# for size in [3, 10, 100, 1_000, 17_000]:
+#     picked = rng.choices(pool, cum_weights=cum, k=size)
+#     print(size, len(set(picked)))
+labels = Counter(event.label for event in simulate(config))
 
-pool = range(config.n_mailboxes)
-cum = list(accumulate(zipf_weights(config.n_mailboxes, config.zipf_s)))
-
-for size in [3, 10, 100, 1_000, 17_000]:
-    picked = rng.choices(pool, cum_weights=cum, k=size)
-    print(size, len(set(picked)))
+print(sum(labels.values()))
+print(labels[Label.RETRY])

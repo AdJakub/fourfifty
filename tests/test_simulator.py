@@ -23,7 +23,7 @@ def test_time_never_goes_back():
 
 def test_count_is_plausible():
     config = SimConfig(duration=600.0)
-    expected = (config.rate + config.harv_speed) * config.duration
+    expected = (config.rate + config.harv_speed) * config.duration + config.retry_chance * config.rate * (config.duration - config.retry_delay)
     tolerance = math.sqrt(expected) * 3
     count = sum(1 for _ in simulate(config))
     assert abs(count - expected) <= tolerance
@@ -76,3 +76,23 @@ def test_if_receiver_is_random():
     config = SimConfig(seed=3, duration=600.0)
     counts = Counter(event.rcpt_to for event in simulate(config))
     assert len(counts) > 1_000
+
+def test_harvester_share():
+    config = SimConfig(seed=3, duration=600.0)
+    counts_harv = Counter(event.mail_from for event in simulate(config) if event.label == Label.HARVEST)
+    expected = config.harv_speed * config.duration
+    tolerance = math.sqrt(expected) * 3
+    assert sum(counts_harv.values()) == pytest.approx(expected, abs=tolerance)
+
+def test_harvester_success_rate():
+    config = SimConfig(seed=3, duration=600.0)
+    counts = [event.rcpt_to for event in simulate(config) if event.label == Label.HARVEST]
+    addresses = set()
+    for k in range(config.n_mailboxes):
+        addresses.add(sender_address(k))
+    overlap = 0
+    for mail in counts:
+        if mail in addresses:
+            overlap += 1
+    expected = (config.n_mailboxes/config.harv_cap)
+    assert overlap / len(counts) == pytest.approx(expected, abs=0.02)

@@ -1,9 +1,10 @@
+import dataclasses
 from dataclasses import dataclass
 import random
 import ipaddress
 from ipaddress import IPv4Network
 from itertools import accumulate
-
+import heapq
 from fourfifty.events import Event, Label
 
 BENCHMARK_NETWORK = IPv4Network('198.18.0.0/15')
@@ -24,6 +25,9 @@ class SimConfig:
     #harvesters
     harv_speed: float = 25.0
     harv_cap: int = 100_000
+    #retries
+    retry_chance: float = 0.03
+    retry_delay: float = 300.0
 
 
 
@@ -54,10 +58,14 @@ def simulate(config):
             address=f'bot@harvest.example',
             circle=()
         )
+    retry_heap = []
     while True:
         clock += rng.expovariate(config.rate+config.harv_speed)
         if clock > config.duration:
             return
+        while retry_heap and retry_heap[0][0] <= clock:
+            due_time, event = heapq.heappop(retry_heap)
+            yield event
         if rng.random() < config.harv_speed / (config.rate + config.harv_speed):
             sender = harvester
             rec_n = rng.randrange(0, config.harv_cap)
@@ -68,7 +76,7 @@ def simulate(config):
             receiver = rng.choice(sender.circle)
             label = Label.NORMAL
         message_id += 1
-        yield Event(
+        current_event =  Event(
             timestamp=clock,
             client_ip= sender.ip,
             mail_from= sender.address,
@@ -76,6 +84,10 @@ def simulate(config):
             message_id=message_id,
             label=label
         )
+        yield current_event
+        if current_event.label == Label.NORMAL and rng.random() < config.retry_chance:
+            retry_event = dataclasses.replace(current_event, timestamp=clock+config.retry_delay, label=Label.RETRY)
+            heapq.heappush(retry_heap, (retry_event.timestamp, retry_event))
 
 def sender_ip(k):
     if k >= BENCHMARK_NETWORK.num_addresses or k < 0:
