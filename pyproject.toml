@@ -5,3 +5,5 @@ build-backend = "setuptools.build_meta"
 name = "fourfifty"
 requires-python = ">=3.10"
 version = "0.1.0"
+[project.optional-dependencies]
+plot = ["matplotlib"]
