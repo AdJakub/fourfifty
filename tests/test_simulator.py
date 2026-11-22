@@ -23,7 +23,7 @@ def test_time_never_goes_back():
 
 def test_count_is_plausible():
     config = SimConfig(duration=600.0)
-    expected = (config.rate + config.harv_speed) * config.duration + config.retry_chance * config.rate * (config.duration - config.retry_delay)
+    expected = (config.rate + config.harv_speed) * config.duration + config.retry_chance * config.rate * (config.duration - config.retry_delay) + config.subscriber_count_big
     tolerance = math.sqrt(expected) * 3
     count = sum(1 for _ in simulate(config))
     assert abs(count - expected) <= tolerance
@@ -96,3 +96,25 @@ def test_harvester_success_rate():
             overlap += 1
     expected = (config.n_mailboxes/config.harv_cap)
     assert overlap / len(counts) == pytest.approx(expected, abs=0.02)
+
+def test_retry_valididty():
+    config = SimConfig(seed=3, duration=600.0)
+    events = list(simulate(config))
+    originals = {event.message_id: event for event in events if event.label == Label.NORMAL}
+    retries = [event for event in events if event.label == Label.RETRY]
+    assert len(retries) > 0
+    for retry in retries:
+        original = originals[retry.message_id]
+        assert retry.mail_from == original.mail_from
+        assert retry.timestamp == original.timestamp + config.retry_delay
+        assert retry.client_ip == original.client_ip
+        assert retry.rcpt_to == original.rcpt_to
+        assert retry.message_id == original.message_id
+
+def test_each_subscriber_gets_one_mail():
+    config = SimConfig(seed=3, duration=600.0)
+    events = list(simulate(config))
+    count = Counter(event.rcpt_to for event in events if event.label == Label.PROMO)
+    assert len(count) == config.subscriber_count_big
+    for subscriber in count:
+        assert count[subscriber] == 1

@@ -28,6 +28,10 @@ class SimConfig:
     #retries
     retry_chance: float = 0.03
     retry_delay: float = 300.0
+    #newsletters
+    subscriber_count_big: int = 8_000
+    campaign_start: int = 180
+    campaign_rate: float = 50.0
 
 
 
@@ -53,18 +57,37 @@ def simulate(config):
         sender_circle = tuple(sender_address(m) for m in picked)
         senders.append(Sender(ip=sender_ip(k), address=sender_address(k), circle=sender_circle))
     cum_weights = list(accumulate(zipf_weights(config.n_senders, config.zipf_s)))
+    promo_picked = rng.sample(range(config.n_mailboxes), k=config.subscriber_count_big)
+    subscriber_circle = tuple(sender_address(m) for m in promo_picked)
     harvester = Sender(
             ip=sender_ip(config.n_mailboxes),
-            address=f'bot@harvest.example',
+            address='bot@harvest.example',
             circle=()
         )
-    retry_heap = []
+    promo = Sender(
+        ip=sender_ip(config.n_mailboxes+1),
+        address='news@letter.example',
+        circle = subscriber_circle
+    )
+    scheduled = []
+    for i, subscriber in enumerate(subscriber_circle):
+        message_id += 1
+        promo_event = Event(
+            timestamp=config.campaign_start + i / config.campaign_rate,
+            client_ip=promo.ip,
+            mail_from=promo.address,
+            rcpt_to=subscriber,
+            label=Label.PROMO,
+            message_id=message_id
+        )
+
+        heapq.heappush(scheduled, (promo_event.timestamp, promo_event))
     while True:
         clock += rng.expovariate(config.rate+config.harv_speed)
         if clock > config.duration:
             return
-        while retry_heap and retry_heap[0][0] <= clock:
-            due_time, event = heapq.heappop(retry_heap)
+        while scheduled and scheduled[0][0] <= clock:
+            due_time, event = heapq.heappop(scheduled)
             yield event
         if rng.random() < config.harv_speed / (config.rate + config.harv_speed):
             sender = harvester
@@ -87,7 +110,7 @@ def simulate(config):
         yield current_event
         if current_event.label == Label.NORMAL and rng.random() < config.retry_chance:
             retry_event = dataclasses.replace(current_event, timestamp=clock+config.retry_delay, label=Label.RETRY)
-            heapq.heappush(retry_heap, (retry_event.timestamp, retry_event))
+            heapq.heappush(scheduled, (retry_event.timestamp, retry_event))
 
 def sender_ip(k):
     if k >= BENCHMARK_NETWORK.num_addresses or k < 0:
