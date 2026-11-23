@@ -54,3 +54,5 @@ labels = Counter(event.label for event in simulate(config))
 
 print(sum(labels.values()))
 print(labels[Label.RETRY])
+
+

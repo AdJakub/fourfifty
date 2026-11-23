@@ -1,0 +1,31 @@
+from collections import Counter
+import argparse
+from fourfifty.simulator import SimConfig, simulate
+from fourfifty.baseline import recipients_per_sender
+
+def main():
+    parser = argparse.ArgumentParser(description="fourfifty mail traffic simulator")
+    parser.add_argument("--duration", type=float, default=600.0)
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    config = SimConfig(duration=args.duration,seed=args.seed)
+    events = list(simulate(config))
+    total = len(events)
+    labels = Counter(event.label for event in events)
+    print("TOTAL MAIL TRAFFIC BY EVENT TYPE")
+    print("-"*32)
+    print(f"{'type':<12}{'events':>10}{'share':>10}")
+    print("-"*32)
+    for label, count in labels.most_common():
+        print(f"{label.value:<12}{count:>10,}{count / total:>10.1%}")
+    print("-"*32)
+    print(f"{'total':<12}{total:>10,}")
+    print(f"\n"*3)
+    print("TOP SENDERS BY DIFFERENT RECIPIENTS")
+    print("-"*44)
+    print(f"{'sender':<32}{'recipients':>12}")
+    print("-"*44)
+    for sender, count in recipients_per_sender(events).most_common(5):
+        print(f"{sender:<32}{count:>12,}")
+if __name__ == "__main__":
+    main()
