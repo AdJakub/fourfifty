@@ -7,6 +7,7 @@ def main():
     parser = argparse.ArgumentParser(description="fourfifty mail traffic simulator")
     parser.add_argument("--duration", type=float, default=600.0)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--plot", action="store_true", help="save graphs as PNG files")
     args = parser.parse_args()
     config = SimConfig(duration=args.duration,seed=args.seed)
     events = list(simulate(config))
@@ -27,5 +28,14 @@ def main():
     print("-"*44)
     for sender, count in recipients_per_sender(events).most_common(5):
         print(f"{sender:<32}{count:>12,}")
+    if args.plot:
+        try:
+            from fourfifty.plots import plot_total, plot_recipients
+        except ImportError:
+            print("plotting requires matplotlib: pip install 'fourfifty[plot]'")
+            return
+        plot_total(events, config, "total.png")
+        plot_recipients(events, "recipients.png")
+        print("saved graphs: total.png, recipients.png")
 if __name__ == "__main__":
     main()
