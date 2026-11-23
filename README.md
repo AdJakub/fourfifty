@@ -85,12 +85,13 @@ answers wether an address is real or not. works quick but has false positives.
 
 ## What the traffic looks like
 
-![Total mail traffic by type](docs/total.png)
+![Total mail traffic by type](https://raw.githubusercontent.com/AdJakub/fourfifty/master/docs/total.png)
+
 
 The harvesting is steady, as expected. the promotion bursts at minutes 3 to 5. and retries start at minute 5 
 
 
-![Different recipients per sender](docs/recipients.png)
+![Different recipients per sender](https://raw.githubusercontent.com/AdJakub/fourfifty/master/docs/recipients.png)
 
 
 HyperLogLog will catch the gap between normal senders and bulk senders, but it wont differentiate between promo and harvest. thats why bloom is needed. 

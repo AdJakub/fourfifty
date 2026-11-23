@@ -5,7 +5,13 @@ build-backend = "setuptools.build_meta"
 name = "fourfifty"
 requires-python = ">=3.10"
 version = "0.1.0"
+description = "Mail traffic simulator and (soon) rate limiter on probabilistic data structures"
+readme = "README.md"
+authors = [{ name = "AdJakub" }]
+license = "MIT"
 [project.optional-dependencies]
 plot = ["matplotlib"]
 [project.scripts]
 fourfifty = "fourfifty.__main__:main"
+[tool.setuptools]
+packages = ["fourfifty"]
