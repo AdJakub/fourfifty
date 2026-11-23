@@ -18,7 +18,7 @@ Fourfifty is an email traffic simulator (for now) and an email rate_limiter (soo
 ## Try it
 
 ```bash
-pip install -e ".[plot]"       # [plot] is optional, only needed for --plot
+pip install "fourfifty[plot]"       # [plot] is optional, only needed for --plot
 fourfifty                       # 10-minute simulation, prints traffic tables
 fourfifty --duration 300 --seed 7
 fourfifty --plot                # also saves total.png and recipients.png
