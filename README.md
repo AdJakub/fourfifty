@@ -2,7 +2,7 @@
 
 ![python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![core dependencies](https://img.shields.io/badge/core%20dependencies-0-brightgreen)
-![status](https://img.shields.io/badge/status-v0.1.0%20%C2%B7%20week%201-orange)
+![PyPI](https://img.shields.io/pypi/v/fourfifty)
 ![hack club terra](https://img.shields.io/badge/Hack%20Club-Terra-ec3750)
 
 ![SMTP](https://img.shields.io/badge/SMTP-450%20try%20again%20later-yellow)
@@ -10,7 +10,7 @@
 ![bloom filter](https://img.shields.io/badge/is%20it%20in%20the%20set%3F-probably-blueviolet)
 ![real emails sent](https://img.shields.io/badge/real%20emails%20sent-0-lightgrey)
 
-Fourfifty is an email traffic simulator (for now) and an email rate_limiter (soon™️). It works on probabilistic data structures, bloom filter built but not set up for now.
+Fourfifty is an email traffic simulator (for now) and an email rate_limiter (soon™️). It works on probabilistic data structures, bloom filter built and can show top senders by missed addresses.
 
 
 > **Status: week 1 of 2(?).** The traffic simulator, the exact baseline and the Bloom filter is built. Count-Min sketch and HyperLogLog come next.
@@ -48,6 +48,13 @@ news@letter.example                    6,000
 user4943@sender4943.example              102
 user19103@sender19103.example             54
 user2816@sender2816.example               43
+
+
+TOP SENDERS BY MAIL TO NONEXISTENT ADDRESSES
+--------------------------------------------
+sender                                misses
+--------------------------------------------
+bot@harvest.example                   11,909
 ```
 
 
