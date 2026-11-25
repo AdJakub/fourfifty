@@ -3,8 +3,9 @@ import argparse
 
 
 from fourfifty.simulator import SimConfig, simulate
-from fourfifty.baseline import recipients_per_sender, valid_mboxes
+from fourfifty.baseline import recipients_per_sender, valid_mboxes, emails_per_sender
 from fourfifty.bloom import BloomFilter
+from fourfifty.countmin import CountMinSketch
 
 def main():
     parser = argparse.ArgumentParser(description="fourfifty mail traffic simulator")
@@ -18,6 +19,9 @@ def main():
     for address in valid_mboxes(config):
         bloom.add(address)
     misses = Counter(event.mail_from for event in events if event.rcpt_to not in bloom)
+    countmin = CountMinSketch(w=1_000, d=4)
+    for event in events:
+        countmin.add(event.mail_from)
     total = len(events)
     labels = Counter(event.label for event in events)
     print("TOTAL MAIL TRAFFIC BY EVENT TYPE")
@@ -27,6 +31,7 @@ def main():
     for label, count in labels.most_common():
         print(f"{label.value:<12}{count:>10,}{count / total:>10.1%}")
     print("-"*32)
+
     print(f"{'total':<12}{total:>10,}")
     print(f"\n"*3)
     print("TOP SENDERS BY DIFFERENT RECIPIENTS")
@@ -40,10 +45,18 @@ def main():
     print("-"*44)
     print(f"{'sender':<32}{'misses':>12}")
     print("-"*44)
+
     for sender, count in misses.most_common(5):
         print(f"{sender:<32}{count:>12,}")
-
-
+    print(f"\n"*3)
+    print("TOP SENDERS BY EMAILS (COUNT-MIN VS EXACT)")
+    print("-" * 62)
+    print(f"{'sender':<32}{'exact':>10}{'estimate':>10}{'over':>10}")
+    print("-" * 62)
+    for sender, count in emails_per_sender(events).most_common(5):
+        sender_estimate = countmin.estimate(sender)
+        overestimate = sender_estimate - count
+        print(f"{sender:<32}{count:>10,}{sender_estimate:>10,}{overestimate:>10}")
     if args.plot:
         try:
             from fourfifty.plots import plot_total, plot_recipients

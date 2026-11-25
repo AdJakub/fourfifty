@@ -17,3 +17,4 @@ class Event:
     rcpt_to: str
     message_id: int
     label: Label
+

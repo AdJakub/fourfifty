@@ -26,7 +26,7 @@ from collections import Counter
 # for simulation in simulate(SimConfig()):
 #     cnt += 1
 # print(cnt)
-config = SimConfig(duration=600.0)
+config = SimConfig(seed=3, duration=600.0)
 # counts = Counter(event.mail_from for event in simulate(config))
 # print (len(counts))
 # total = sum(counts.values())
@@ -50,9 +50,26 @@ config = SimConfig(duration=600.0)
 # for size in [3, 10, 100, 1_000, 17_000]:
 #     picked = rng.choices(pool, cum_weights=cum, k=size)
 #     print(size, len(set(picked)))
-labels = Counter(event.label for event in simulate(config))
-
-print(sum(labels.values()))
-print(labels[Label.RETRY])
+# labels = Counter(event.label for event in simulate(config))
+#
+# print(sum(labels.values()))
+# print(labels[Label.RETRY])
+from fourfifty.countmin import CountMinSketch
+from fourfifty.baseline import emails_per_sender
+events = list(simulate(config))
+w = 500
+d = 4
+countmin = CountMinSketch(w, d)
+for event in events:
+    countmin.add(event.mail_from)
+answer_k = emails_per_sender(events)
+overestimates = list()
+for sender, count in answer_k.items():
+    count_estimate = countmin.estimate(sender)
+    estimate_true_count = count_estimate - count
+    overestimates.append(estimate_true_count)
+average_result = sum(overestimates) / len(overestimates)
+biggest_result = max(overestimates)
+print(average_result, biggest_result)
 
 
