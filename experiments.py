@@ -54,22 +54,28 @@ config = SimConfig(seed=3, duration=600.0)
 #
 # print(sum(labels.values()))
 # print(labels[Label.RETRY])
-from fourfifty.countmin import CountMinSketch
-from fourfifty.baseline import emails_per_sender
-events = list(simulate(config))
-w = 500
-d = 4
-countmin = CountMinSketch(w, d)
-for event in events:
-    countmin.add(event.mail_from)
-answer_k = emails_per_sender(events)
-overestimates = list()
-for sender, count in answer_k.items():
-    count_estimate = countmin.estimate(sender)
-    estimate_true_count = count_estimate - count
-    overestimates.append(estimate_true_count)
-average_result = sum(overestimates) / len(overestimates)
-biggest_result = max(overestimates)
-print(average_result, biggest_result)
-
+# from fourfifty.countmin import CountMinSketch
+# from fourfifty.baseline import emails_per_sender
+# events = list(simulate(config))
+# w = 500
+# d = 4
+# countmin = CountMinSketch(w, d)
+# for event in events:
+#     countmin.add(event.mail_from)
+# answer_k = emails_per_sender(events)
+# overestimates = list()
+# for sender, count in answer_k.items():
+#     count_estimate = countmin.estimate(sender)
+#     estimate_true_count = count_estimate - count
+#     overestimates.append(estimate_true_count)
+# average_result = sum(overestimates) / len(overestimates)
+# biggest_result = max(overestimates)
+# print(average_result, biggest_result)
+#
+number = 0
+zeroes = 0
+while number % 2 == 0 and number > 0:
+    zeroes += 1
+    number = number // 2
+print(zeroes)
 
