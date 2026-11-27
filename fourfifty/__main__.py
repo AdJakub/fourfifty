@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 import argparse
 
 
@@ -6,6 +6,7 @@ from fourfifty.simulator import SimConfig, simulate
 from fourfifty.baseline import recipients_per_sender, valid_mboxes, emails_per_sender
 from fourfifty.bloom import BloomFilter
 from fourfifty.countmin import CountMinSketch
+from fourfifty.hyperloglog import HyperLogLog
 
 def main():
     parser = argparse.ArgumentParser(description="fourfifty mail traffic simulator")
@@ -22,6 +23,9 @@ def main():
     countmin = CountMinSketch(w=1_000, d=4)
     for event in events:
         countmin.add(event.mail_from)
+    hlls = defaultdict(lambda: HyperLogLog(64))
+    for event in events:
+        hlls[event.mail_from].add(event.rcpt_to)
     total = len(events)
     labels = Counter(event.label for event in events)
     print("TOTAL MAIL TRAFFIC BY EVENT TYPE")
@@ -57,6 +61,15 @@ def main():
         sender_estimate = countmin.estimate(sender)
         overestimate = sender_estimate - count
         print(f"{sender:<32}{count:>10,}{sender_estimate:>10,}{overestimate:>10}")
+    print(f"\n"*3)
+    print("TOP SENDERS BY DIFFERENT RECIPIENTS (HLL VS EXACT)")
+    print("-"*62)
+    print(f"{'sender':<32}{'exact':>10}{'estimate':>10}{'error':>10}")
+    print("-"*62)
+    for sender, count in recipients_per_sender(events).most_common(5):
+        sender_estimate = HyperLogLog.estimate(hlls[sender])
+        error = (sender_estimate - count) / count
+        print(f"{sender:<32}{count:>10,}{sender_estimate:>10,.0f}{error:>10.1%}")
     if args.plot:
         try:
             from fourfifty.plots import plot_total, plot_recipients
